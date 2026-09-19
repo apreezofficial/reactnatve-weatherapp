@@ -16,12 +16,15 @@ import {
   loadCities,
   saveCities,
   saveCurrentLocation,
-} from '../services/StorageService';
+} from '../services/storageService';
+
+import {searchCity} from '../services/weatherService';
 
 import {City} from '../types/weather';
 
 export default function AddCityScreen({navigation}: any) {
   const [cityName, setCityName] = useState('');
+  const [adding, setAdding] = useState(false);
 
   async function addCity() {
     if (!cityName.trim()) {
@@ -29,19 +32,32 @@ export default function AddCityScreen({navigation}: any) {
       return;
     }
 
-    const city: City = {
-      id: Date.now().toString(),
-      name: cityName.trim(),
-      latitude: 0,
-      longitude: 0,
-      isCurrentLocation: false,
-    };
+    try {
+      setAdding(true);
 
-    const cities = await loadCities();
+      const result = await searchCity(cityName.trim());
 
-    await saveCities([...cities, city]);
+      const city: City = {
+        id: Date.now().toString(),
+        name: result.name,
+        latitude: result.latitude,
+        longitude: result.longitude,
+        isCurrentLocation: false,
+      };
 
-    navigation.goBack();
+      const cities = await loadCities();
+
+      await saveCities([...cities, city]);
+
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Could not find that city. Check the city name and try again.',
+      );
+    } finally {
+      setAdding(false);
+    }
   }
 
   async function requestLocationPermission() {
@@ -69,15 +85,22 @@ export default function AddCityScreen({navigation}: any) {
 
     Geolocation.getCurrentPosition(
       async position => {
-        const {latitude, longitude} = position.coords;
+        try {
+          const {latitude, longitude} = position.coords;
 
-        await saveCurrentLocation(
-          latitude,
-          longitude,
-          'Current location',
-        );
+          await saveCurrentLocation(
+            latitude,
+            longitude,
+            'Current location',
+          );
 
-        navigation.goBack();
+          navigation.goBack();
+        } catch {
+          Alert.alert(
+            'Error',
+            'Could not save your current location.',
+          );
+        }
       },
       error => {
         Alert.alert('Location error', error.message);
@@ -112,15 +135,23 @@ export default function AddCityScreen({navigation}: any) {
         placeholderTextColor="#999"
         value={cityName}
         onChangeText={setCityName}
+        autoCapitalize="words"
       />
 
-      <Pressable style={styles.addButton} onPress={addCity}>
-        <Text style={styles.addButtonText}>Add city</Text>
+      <Pressable
+        style={styles.addButton}
+        onPress={addCity}
+        disabled={adding}>
+        <Text style={styles.addButtonText}>
+          {adding ? 'Adding...' : 'Add city'}
+        </Text>
       </Pressable>
 
       <View style={styles.orContainer}>
         <View style={styles.orLine} />
+
         <Text style={styles.orText}>or</Text>
+
         <View style={styles.orLine} />
       </View>
 
