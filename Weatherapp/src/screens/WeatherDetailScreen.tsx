@@ -11,6 +11,70 @@ import {City, WeatherData} from '../types/weather';
 import {getWeather} from '../services/weatherService';
 import {loadCities} from '../services/StorageService';
 
+function getWeatherDescription(code: number): string {
+  if (code === 0) {
+    return 'Clear sky';
+  }
+
+  if (code === 1 || code === 2 || code === 3) {
+    return 'Partly cloudy';
+  }
+
+  if (code === 45 || code === 48) {
+    return 'Foggy';
+  }
+
+  if (
+    (code >= 51 && code <= 57) ||
+    (code >= 61 && code <= 67) ||
+    (code >= 80 && code <= 82)
+  ) {
+    return 'Rainy';
+  }
+
+  if (code >= 71 && code <= 77) {
+    return 'Snowy';
+  }
+
+  if (code >= 95) {
+    return 'Thunderstorm';
+  }
+
+  return 'Cloudy';
+}
+
+function getWeatherColor(code: number): string {
+  if (code === 0) {
+    return '#FACC15';
+  }
+
+  if (code === 1 || code === 2 || code === 3) {
+    return '#93C5FD';
+  }
+
+  if (code === 45 || code === 48) {
+    return '#CBD5E1';
+  }
+
+  if (
+    (code >= 51 && code <= 57) ||
+    (code >= 61 && code <= 67) ||
+    (code >= 80 && code <= 82)
+  ) {
+    return '#60A5FA';
+  }
+
+  if (code >= 71 && code <= 77) {
+    return '#E0F2FE';
+  }
+
+  if (code >= 95) {
+    return '#818CF8';
+  }
+
+  return '#93C5FD';
+}
+
 export default function WeatherDetailScreen({route, navigation}: any) {
   const {cityId} = route.params;
 
@@ -23,7 +87,10 @@ export default function WeatherDetailScreen({route, navigation}: any) {
       setLoading(true);
 
       const cities = await loadCities();
-      const selectedCity = cities.find(item => item.id === cityId);
+
+      const selectedCity = cities.find(
+        item => item.id === cityId,
+      );
 
       if (!selectedCity) {
         return;
@@ -37,8 +104,6 @@ export default function WeatherDetailScreen({route, navigation}: any) {
       );
 
       setWeather(result);
-    } catch (error) {
-      console.error('Error fetching weather:', error);
     } finally {
       setLoading(false);
     }
@@ -51,10 +116,18 @@ export default function WeatherDetailScreen({route, navigation}: any) {
   if (loading || !city || !weather) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" />
       </View>
     );
   }
+
+  const description = getWeatherDescription(
+    weather.weatherCode,
+  );
+
+  const weatherColor = getWeatherColor(
+    weather.weatherCode,
+  );
 
   return (
     <View style={styles.container}>
@@ -73,32 +146,43 @@ export default function WeatherDetailScreen({route, navigation}: any) {
       <View style={styles.divider} />
 
       <View style={styles.weatherMain}>
-        <View style={styles.weatherIcon}>
-          <Text style={styles.weatherEmoji}>☀</Text>
-        </View>
+        <View
+          style={[
+            styles.weatherIndicator,
+            {backgroundColor: weatherColor},
+          ]}
+        />
 
         <Text style={styles.temperature}>
           {Math.round(weather.temperature)}°
         </Text>
 
-        <Text style={styles.description}>Clear sky</Text>
+        <View style={styles.descriptionRow}>
+          <Text style={styles.description}>
+            {description}
+          </Text>
 
-        <Text style={styles.feelsLike}>
-          Feels like {Math.round(weather.apparentTemperature)}°
-        </Text>
+          <Text style={styles.feelsLike}>
+            Feels like {Math.round(weather.apparentTemperature)}°
+          </Text>
+        </View>
       </View>
 
       <View style={styles.infoRow}>
         <View style={styles.infoCard}>
+          <Text style={styles.infoValue}>
+            {weather.humidity}%
+          </Text>
+
           <Text style={styles.infoLabel}>Humidity</Text>
-          <Text style={styles.infoValue}>{weather.humidity}%</Text>
         </View>
 
         <View style={styles.infoCard}>
-          <Text style={styles.infoLabel}>Wind</Text>
           <Text style={styles.infoValue}>
             {Math.round(weather.windSpeed)} km/h
           </Text>
+
+          <Text style={styles.infoLabel}>Wind</Text>
         </View>
       </View>
     </View>
@@ -154,17 +238,10 @@ const styles = StyleSheet.create({
     paddingTop: 45,
   },
 
-  weatherIcon: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: '#FEF3C7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  weatherEmoji: {
-    fontSize: 55,
+  weatherIndicator: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
 
   temperature: {
@@ -174,17 +251,23 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
+  descriptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+
   description: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '400',
     color: '#111111',
-    marginTop: 5,
   },
 
   feelsLike: {
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: '400',
     color: '#777777',
-    marginTop: 8,
+    marginLeft: 12,
   },
 
   infoRow: {
@@ -195,21 +278,20 @@ const styles = StyleSheet.create({
 
   infoCard: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+    backgroundColor: '#E0F2FE',
     borderRadius: 14,
     padding: 18,
   },
 
-  infoLabel: {
-    fontSize: 14,
-    color: '#777777',
-  },
-
   infoValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     color: '#111111',
-    marginTop: 8,
+  },
+
+  infoLabel: {
+    fontSize: 14,
+    color: '#555555',
+    marginTop: 6,
   },
 });
