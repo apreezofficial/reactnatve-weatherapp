@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -7,47 +7,69 @@ import {
   Text,
   View,
 } from 'react-native';
-import {useFocusEffect} from '@react-navigation/native';
 
 import {City} from '../types/weather';
 import {loadCities} from '../services/StorageService';
+import {getWeather} from '../services/weatherService';
 
 export default function SavedCitiesScreen({navigation}: any) {
   const [cities, setCities] = useState<City[]>([]);
+  const [temperatures, setTemperatures] = useState<
+    Record<string, number>
+  >({});
   const [loading, setLoading] = useState(true);
 
-  // Re-fetch cities every time the screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      let isMounted = true;
+  const loadSavedCities = useCallback(async () => {
+    try {
+      setLoading(true);
 
-      const fetchSavedCities = async () => {
-        try {
-          const savedCities = await loadCities();
-          if (isMounted) {
-            setCities(savedCities);
+      const savedCities = await loadCities();
+
+      setCities(savedCities);
+
+      const results = await Promise.all(
+        savedCities.map(async city => {
+          try {
+            const weather = await getWeather(
+              city.latitude,
+              city.longitude,
+            );
+
+            return {
+              id: city.id,
+              temperature: weather.temperature,
+            };
+          } catch {
+            return {
+              id: city.id,
+              temperature: null,
+            };
           }
-        } catch (error) {
-          console.error('Failed to load saved cities:', error);
-        } finally {
-          if (isMounted) {
-            setLoading(false);
-          }
+        }),
+      );
+
+      const temperatureMap: Record<string, number> = {};
+
+      results.forEach(item => {
+        if (item.temperature !== null) {
+          temperatureMap[item.id] = item.temperature;
         }
-      };
+      });
 
-      fetchSavedCities();
+      setTemperatures(temperatureMap);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      return () => {
-        isMounted = false;
-      };
-    }, []),
-  );
+  useEffect(() => {
+    loadSavedCities();
+  }, [loadSavedCities]);
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -58,7 +80,7 @@ export default function SavedCitiesScreen({navigation}: any) {
         <Text style={styles.title}>Saved cities</Text>
 
         <Pressable
-          style={({pressed}) => [styles.addButton, pressed && styles.pressed]}
+          style={styles.addButton}
           onPress={() => navigation.navigate('AddCity')}>
           <Text style={styles.addButtonText}>+</Text>
         </Pressable>
@@ -73,11 +95,10 @@ export default function SavedCitiesScreen({navigation}: any) {
       ) : (
         <FlatList
           data={cities}
-          keyExtractor={item => item.id.toString()}
-          showsVerticalScrollIndicator={false}
+          keyExtractor={item => item.id}
           renderItem={({item}) => (
             <Pressable
-              style={({pressed}) => [styles.cityRow, pressed && styles.pressedRow]}
+              style={styles.cityRow}
               onPress={() =>
                 navigation.navigate('WeatherDetail', {
                   cityId: item.id,
@@ -85,10 +106,17 @@ export default function SavedCitiesScreen({navigation}: any) {
               }>
               <View style={styles.cityInfo}>
                 <View style={styles.statusDot} />
-                <Text style={styles.cityName}>{item.name}</Text>
+
+                <Text style={styles.cityName}>
+                  {item.name}
+                </Text>
               </View>
 
-              <Text style={styles.temperature}>--°</Text>
+              <Text style={styles.temperature}>
+                {temperatures[item.id] !== undefined
+                  ? `${Math.round(temperatures[item.id])}°`
+                  : '--°'}
+              </Text>
             </Pressable>
           )}
         />
@@ -104,16 +132,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
   },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+
   title: {
     fontSize: 32,
     fontWeight: '700',
     color: '#111111',
   },
+
   addButton: {
     width: 44,
     height: 44,
@@ -122,17 +153,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   addButtonText: {
     color: '#FFFFFF',
     fontSize: 30,
     fontWeight: '400',
     lineHeight: 32,
   },
+
   divider: {
     height: 1,
     backgroundColor: '#E5E5E5',
     marginTop: 20,
   },
+
   cityRow: {
     minHeight: 70,
     flexDirection: 'row',
@@ -141,10 +175,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
+
   cityInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+
   statusDot: {
     width: 10,
     height: 10,
@@ -152,33 +188,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#22C55E',
     marginRight: 12,
   },
+
   cityName: {
     fontSize: 17,
     color: '#111111',
   },
+
   temperature: {
     fontSize: 17,
     fontWeight: '600',
     color: '#111111',
   },
+
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   emptyText: {
     fontSize: 16,
     color: '#777777',
   },
+
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  pressed: {
-    opacity: 0.8,
-  },
-  pressedRow: {
-    backgroundColor: '#F9FAFB',
   },
 });
