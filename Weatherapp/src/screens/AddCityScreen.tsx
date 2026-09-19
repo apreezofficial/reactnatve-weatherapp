@@ -50,7 +50,7 @@ export default function AddCityScreen({navigation}: any) {
       await saveCities([...cities, city]);
 
       navigation.goBack();
-    } catch (error) {
+    } catch {
       Alert.alert(
         'Error',
         'Could not find that city. Check the city name and try again.',
