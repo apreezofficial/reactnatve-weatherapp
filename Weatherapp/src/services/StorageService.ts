@@ -44,3 +44,4 @@ export async function saveCurrentLocation(
     const otherCities = cities.filter(city => city.id !== 'current_location');
     await saveCities([currentLocation, ...otherCities]);
     }
+    
