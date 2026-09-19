@@ -1,4 +1,4 @@
-name: generate apk
+name: React Native CI & Build
 
 on:
   push:
@@ -44,7 +44,7 @@ jobs:
         run: npm run lint
 
   build-android:
-    name: Build Android APK
+    name: Build Standalone APK
     needs: checks
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -76,6 +76,21 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Clean previous assets & create assets dir
+        run: |
+          rm -rf android/app/src/main/assets/index.android.bundle
+          rm -rf android/app/src/main/res/drawable-*
+          mkdir -p android/app/src/main/assets
+
+      - name: Bundle JavaScript assets
+        run: |
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res/
+
       - name: Make Gradle Wrapper executable
         run: chmod +x android/gradlew
 
@@ -85,5 +100,5 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: weather-app-debug-apk
+          name: weather-app-standalone-apk
           path: Weatherapp/android/app/build/outputs/apk/debug/app-debug.apk
