@@ -44,7 +44,7 @@ export default function WeatherDetailScreen({route, navigation}: any) {
 
   useEffect(() => {
     loadWeather();
-  }, []);
+  }, [loadWeather]);
 
   if (loading || !city || !weather) {
     return (
