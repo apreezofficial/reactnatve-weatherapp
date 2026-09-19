@@ -16,7 +16,7 @@ import {
   loadCities,
   saveCities,
   saveCurrentLocation,
-} from '../services/storageService';
+} from '../services/StorageService';
 
 import {City} from '../types/weather';
 

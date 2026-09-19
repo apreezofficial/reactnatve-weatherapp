@@ -9,7 +9,7 @@ import {
 
 import {City, WeatherData} from '../types/weather';
 import {getWeather} from '../services/weatherService';
-import {loadCities} from '../services/storageService';
+import {loadCities} from '../services/StorageService';
 
 export default function WeatherDetailScreen({route, navigation}: any) {
   const {cityId} = route.params;

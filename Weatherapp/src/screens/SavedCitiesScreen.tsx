@@ -10,7 +10,7 @@ import {
 import {useFocusEffect} from '@react-navigation/native';
 
 import {City} from '../types/weather';
-import {loadCities} from '../services/storageService';
+import {loadCities} from '../services/StorageService';
 
 export default function SavedCitiesScreen({navigation}: any) {
   const [cities, setCities] = useState<City[]>([]);
