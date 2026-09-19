@@ -1,4 +1,4 @@
-Name: generate apk file
+name: generate apk file
 
 on:
   push:
