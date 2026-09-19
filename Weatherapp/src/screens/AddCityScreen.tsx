@@ -254,17 +254,18 @@ const styles = StyleSheet.create({
   },
 
   locationButton: {
-    height: 54,
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  height: 54,
+  borderWidth: 1,
+  borderColor: '#2563EB',
+  backgroundColor: 'transparent',
+  borderRadius: 10,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
 
   locationButtonText: {
-    color: '#2563EB',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  color: '#111111',
+  fontSize: 16,
+  fontWeight: '600',
+},
 });
