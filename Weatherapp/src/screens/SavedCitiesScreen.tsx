@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 
 import {City} from '../types/weather';
 import {loadCities} from '../services/StorageService';
@@ -62,9 +63,11 @@ export default function SavedCitiesScreen({navigation}: any) {
     }
   }, []);
 
-  useEffect(() => {
-    loadSavedCities();
-  }, [loadSavedCities]);
+  useFocusEffect(
+    useCallback(() => {
+      loadSavedCities();
+    }, [loadSavedCities]),
+  );
 
   if (loading) {
     return (
@@ -107,9 +110,7 @@ export default function SavedCitiesScreen({navigation}: any) {
               <View style={styles.cityInfo}>
                 <View style={styles.statusDot} />
 
-                <Text style={styles.cityName}>
-                  {item.name}
-                </Text>
+                <Text style={styles.cityName}>{item.name}</Text>
               </View>
 
               <Text style={styles.temperature}>
