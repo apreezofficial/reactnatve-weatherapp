@@ -256,14 +256,14 @@ const styles = StyleSheet.create({
   locationButton: {
   height: 54,
   borderWidth: 1,
-  borderColor: '#2563EB',
+  borderColor: '#D9D9D9',
   backgroundColor: 'transparent',
   borderRadius: 10,
   alignItems: 'center',
   justifyContent: 'center',
 },
 
-  locationButtonText: {
+locationButtonText: {
   color: '#111111',
   fontSize: 16,
   fontWeight: '600',
