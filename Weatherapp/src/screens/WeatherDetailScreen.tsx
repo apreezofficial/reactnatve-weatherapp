@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -9,7 +9,7 @@ import {
 
 import {City, WeatherData} from '../types/weather';
 import {getWeather} from '../services/weatherService';
-import {loadCities} from '../services/StorageService';
+import {loadCities} from '../services/storageService';
 
 export default function WeatherDetailScreen({route, navigation}: any) {
   const {cityId} = route.params;
@@ -18,7 +18,7 @@ export default function WeatherDetailScreen({route, navigation}: any) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadWeather() {
+  const loadWeather = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -37,10 +37,12 @@ export default function WeatherDetailScreen({route, navigation}: any) {
       );
 
       setWeather(result);
+    } catch (error) {
+      console.error('Error fetching weather:', error);
     } finally {
       setLoading(false);
     }
-  }
+  }, [cityId]);
 
   useEffect(() => {
     loadWeather();
@@ -49,7 +51,7 @@ export default function WeatherDetailScreen({route, navigation}: any) {
   if (loading || !city || !weather) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#2563EB" />
       </View>
     );
   }
@@ -127,15 +129,18 @@ const styles = StyleSheet.create({
   back: {
     fontSize: 38,
     lineHeight: 40,
+    color: '#111111',
   },
 
   title: {
     fontSize: 20,
     fontWeight: '700',
+    color: '#111111',
   },
 
   refresh: {
     fontSize: 28,
+    color: '#111111',
   },
 
   divider: {
@@ -165,12 +170,14 @@ const styles = StyleSheet.create({
   temperature: {
     fontSize: 72,
     fontWeight: '700',
+    color: '#111111',
     marginTop: 20,
   },
 
   description: {
     fontSize: 20,
     fontWeight: '600',
+    color: '#111111',
     marginTop: 5,
   },
 
@@ -202,6 +209,7 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 20,
     fontWeight: '700',
+    color: '#111111',
     marginTop: 8,
   },
 });
